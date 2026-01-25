@@ -51,7 +51,7 @@ async def render_ingredient_screen(
 
 category_inline_kb = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text=c.label, callback_data=f"cat:{c.id}")]
+        [InlineKeyboardButton(text=c.label, callback_data=f"cat:{c.value}")]
         for c in Category
     ]
 )
@@ -61,7 +61,7 @@ units_inline_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text=u.value,
-                callback_data=f"unit:{u.name}",
+                callback_data=f"unit:{u.value}",
             )
             for u in list(Unit)[i : i + 3]
         ]
@@ -98,7 +98,7 @@ async def cmd_create(message: Message, state: FSMContext):
 @router.callback_query(CreateRecipeStates.category, F.data.startswith("cat:"))
 async def category_chosen(call: CallbackQuery, state: FSMContext):
     category_id = call.data.removeprefix("cat:")
-    category = Category.from_id(category_id)
+    category = Category(category_id)
 
     await state.update_data(
         category=category,
@@ -177,7 +177,8 @@ async def ing_qty(message: Message, state: FSMContext):
 
 @router.callback_query(CreateRecipeStates.ing_unit, F.data.startswith("unit:"))
 async def ing_unit(call: CallbackQuery, state: FSMContext):
-    unit = Unit[call.data.removeprefix("unit:")]
+    unit_value = call.data.removeprefix("unit:")
+    unit = Unit(unit_value)
 
     data = await state.get_data()
     draft: IngredientDraft = data["draft"]

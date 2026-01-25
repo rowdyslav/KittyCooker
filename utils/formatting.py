@@ -16,7 +16,8 @@ def format_ingredients(ingredients: Sequence[Ingredient]) -> str:
         unit = getattr(ing, "unit", None)
 
         if quantity is not None and unit:
-            lines.append(f"{idx}. {name} — {quantity} {unit}")
+            unit_str = unit.value if hasattr(unit, "value") else str(unit)
+            lines.append(f"{idx}. {name} — {quantity} {unit_str}")
         else:
             lines.append(f"{idx}. {name}")
 
@@ -39,7 +40,9 @@ def format_draft(draft: Optional[IngredientDraft]) -> str:
         parts.append(f"кол-во: {draft.quantity}")
 
     if getattr(draft, "unit", None):
-        parts.append(f"ед.: {draft.unit}")
+        unit = draft.unit
+        unit_str = unit.value if hasattr(unit, "value") else str(unit)
+        parts.append(f"ед.: {unit_str}")
 
     return ", ".join(parts)
 
@@ -47,7 +50,7 @@ def format_draft(draft: Optional[IngredientDraft]) -> str:
 def format_recipe_view(recipe: Recipe) -> str:
     ingredients_text = (
         "\n".join(
-            f"{i + 1}. {ing.name} — {ing.quantity} {ing.unit}"
+            f"{i + 1}. {ing.name} — {ing.quantity} {(ing.unit.value if hasattr(ing.unit, 'value') else ing.unit)}"
             for i, ing in enumerate(recipe.ingredients)
         )
         if recipe.ingredients
@@ -67,5 +70,5 @@ def format_recipe_view(recipe: Recipe) -> str:
         f"{ingredients_text}\n\n"
         f"<b>Описание:</b>\n"
         f"{recipe.text or '—'}\n\n"
-        f"Готово! Приятного аппетита!"
+        f"Готово! Приятного аппетита!😍"
     )

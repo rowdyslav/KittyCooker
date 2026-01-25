@@ -21,7 +21,7 @@ async def choose_category_handler(message: Message):
             [
                 InlineKeyboardButton(
                     text=cat.label,
-                    callback_data=f"cat:{cat.id}:page:1",
+                    callback_data=f"cat:{cat.value}:page:1",
                 )
             ]
             for cat in Category
@@ -68,7 +68,7 @@ async def recipes_by_category_callback(callback: CallbackQuery):
             [
                 InlineKeyboardButton(
                     text=recipe.name,
-                    callback_data=f"recipe:{recipe.id}:cat:{category.id}:page:{page}",
+                    callback_data=f"recipe:{recipe.id}:cat:{category.value}:page:{page}",
                 )
             ]
         )
@@ -79,7 +79,7 @@ async def recipes_by_category_callback(callback: CallbackQuery):
         nav_buttons.append(
             InlineKeyboardButton(
                 text="⬅️ Назад",
-                callback_data=f"cat:{category.id}:page:{page - 1}",
+                callback_data=f"cat:{category.value}:page:{page - 1}",
             )
         )
 
@@ -87,7 +87,7 @@ async def recipes_by_category_callback(callback: CallbackQuery):
         nav_buttons.append(
             InlineKeyboardButton(
                 text="➡️ Далее",
-                callback_data=f"cat:{category.id}:page:{page + 1}",
+                callback_data=f"cat:{category.value}:page:{page + 1}",
             )
         )
 
@@ -123,7 +123,7 @@ async def recipe_view_callback(callback: CallbackQuery):
             [
                 InlineKeyboardButton(
                     text="⬅️ Назад",
-                    callback_data=f"cat:{category.id}:page:{page}",
+                    callback_data=f"cat:{category.value}:page:{page}",
                 )
             ]
         ]
