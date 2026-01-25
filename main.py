@@ -9,8 +9,11 @@ from beanie import init_beanie
 from pymongo import AsyncMongoClient
 
 from commands import all_commands
+from deploy import keep_alive
 from env import BOT_TOKEN, DB_URL
 from models import Recipe
+
+keep_alive()
 
 dp = Dispatcher()
 
