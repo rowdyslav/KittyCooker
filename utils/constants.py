@@ -25,7 +25,6 @@ class Unit(Enum):
     TBSP = "ст.л"
     TSP = "ч.л"
     G = "г"
-    L = "л"
     ML = "мл"
 
 

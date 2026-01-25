@@ -30,17 +30,24 @@ def format_draft(draft: Optional[IngredientDraft]) -> str:
 
     parts: list[str] = []
 
-    name = getattr(draft, "name", None)
+    # Универсальный доступ к полям draft (dict или объект)
+    def get(field, default=None):
+        if isinstance(draft, dict):
+            return draft.get(field, default)
+        return getattr(draft, field, default)
+
+    name = get("name")
     if name:
         parts.append(f"название: {name}")
     else:
         parts.append("название: —")
 
-    if getattr(draft, "quantity", None) is not None:
-        parts.append(f"кол-во: {draft.quantity}")
+    quantity = get("quantity")
+    if quantity is not None:
+        parts.append(f"кол-во: {quantity}")
 
-    if getattr(draft, "unit", None):
-        unit = draft.unit
+    unit = get("unit")
+    if unit:
         unit_str = unit.value if hasattr(unit, "value") else str(unit)
         parts.append(f"ед.: {unit_str}")
 
