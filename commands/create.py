@@ -56,6 +56,12 @@ category_inline_kb = InlineKeyboardMarkup(
     ]
 )
 
+# Универсальная клавиатура с кнопкой "Назад"
+back_inline_kb = InlineKeyboardMarkup(
+    inline_keyboard=[[InlineKeyboardButton(text="⬅️ Назад", callback_data="back")]]
+)
+
+# Клавиатура выбора единицы измерения с кнопкой "Назад"
 units_inline_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -67,11 +73,15 @@ units_inline_kb = InlineKeyboardMarkup(
         ]
         for i in range(0, len(Unit), 3)
     ]
+    + [[InlineKeyboardButton(text="⬅️ Назад", callback_data="back")]]
 )
 
 finish_inline_kb = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text=FINISH_BUTTON, callback_data="finish_ings")]
+        [
+            InlineKeyboardButton(text=FINISH_BUTTON, callback_data="finish_ings"),
+            InlineKeyboardButton(text="⬅️ Назад", callback_data="back_to_unit"),
+        ]
     ]
 )
 
@@ -115,12 +125,16 @@ async def category_chosen(call: CallbackQuery, state: FSMContext):
 async def recipe_name(message: Message, state: FSMContext):
     name = message.text.strip()
     if not name:
-        return await message.answer("Название не может быть пустым.")
+        return await message.answer(
+            "Название не может быть пустым.", reply_markup=back_inline_kb
+        )
 
     await state.update_data(name=name)
     await state.set_state(CreateRecipeStates.ing_name)
 
-    msg = await message.answer("Введите название ингредиента:")
+    msg = await message.answer(
+        "Введите название ингредиента:", reply_markup=back_inline_kb
+    )
     await state.update_data(main_msg_id=msg.message_id)
 
 
@@ -144,6 +158,7 @@ async def ing_name(message: Message, state: FSMContext):
         ingredients=data["ingredients"],
         draft=draft.model_dump(),
         footer="Введите количество:",
+        reply_markup=back_inline_kb,
     )
 
 
@@ -154,7 +169,9 @@ async def ing_qty(message: Message, state: FSMContext):
         if qty <= 0:
             raise ValueError
     except ValueError:
-        return await message.answer("Введите положительное число.")
+        return await message.answer(
+            "Введите положительное число.", reply_markup=back_inline_kb
+        )
 
     data = await state.get_data()
     draft: IngredientDraft = data["draft"]
@@ -193,8 +210,10 @@ async def ing_unit(call: CallbackQuery, state: FSMContext):
         )
     )
 
+    # Сохраняем последний draft для возможности возврата к юнитам
     await state.update_data(
         ingredients=ingredients,
+        last_draft=draft,
         draft=None,
     )
     await state.set_state(CreateRecipeStates.ing_name)
@@ -216,7 +235,9 @@ async def ing_unit(call: CallbackQuery, state: FSMContext):
 async def finish_ings(call: CallbackQuery, state: FSMContext):
     await state.get_data()
     await state.set_state(CreateRecipeStates.text)
-    await call.message.edit_text("Введите текст рецепта (описание приготовления):")
+    await call.message.edit_text(
+        "Введите текст рецепта (описание приготовления):", reply_markup=back_inline_kb
+    )
     await call.answer()
 
 
@@ -224,7 +245,9 @@ async def finish_ings(call: CallbackQuery, state: FSMContext):
 async def recipe_text(message: Message, state: FSMContext):
     text = message.text.strip()
     if not text:
-        return await message.answer("Текст рецепта не может быть пустым.")
+        return await message.answer(
+            "Текст рецепта не может быть пустым.", reply_markup=back_inline_kb
+        )
 
     data = await state.get_data()
 
@@ -242,3 +265,87 @@ async def recipe_text(message: Message, state: FSMContext):
         parse_mode="HTML",
     )
     await state.clear()
+
+
+# === Обработчик кнопки "Назад" ===
+
+
+@router.callback_query(F.data == "back_to_unit")
+async def back_to_unit_after_finish(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    # Восстанавливаем последний draft
+    last_draft = data.get("last_draft")
+    if not last_draft:
+        await call.answer(
+            "Нет предыдущего ингредиента для редактирования.", show_alert=True
+        )
+        return
+
+    # Удаляем последний ингредиент из списка
+    ingredients = list(data["ingredients"])
+    if ingredients:
+        ingredients.pop()
+
+    await state.update_data(draft=last_draft, ingredients=ingredients)
+    await state.set_state(CreateRecipeStates.ing_unit)
+    await render_ingredient_screen(
+        bot=call.bot,
+        chat_id=call.message.chat.id,
+        message_id=data["main_msg_id"],
+        ingredients=ingredients,
+        draft=last_draft.model_dump(),
+        footer="Выберите единицу измерения:",
+        reply_markup=units_inline_kb,
+    )
+    await call.answer()
+
+
+@router.callback_query(F.data == "back")
+async def go_back(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    current_state = await state.get_state()
+
+    if current_state == CreateRecipeStates.name.state:
+        # Назад к выбору категории
+        await state.set_state(CreateRecipeStates.category)
+        await call.message.edit_text(
+            "Создаём новый рецепт.\nВыберите категорию:",
+            reply_markup=category_inline_kb,
+        )
+    elif current_state == CreateRecipeStates.ing_name.state:
+        # Назад к названию рецепта
+        await state.set_state(CreateRecipeStates.name)
+        await call.message.edit_text(
+            "Введите название рецепта:", reply_markup=back_inline_kb
+        )
+    elif current_state == CreateRecipeStates.ing_qty.state:
+        # Назад к названию ингредиента
+        await state.set_state(CreateRecipeStates.ing_name)
+        await call.message.edit_text(
+            "Введите название ингредиента:", reply_markup=back_inline_kb
+        )
+    elif current_state == CreateRecipeStates.ing_unit.state:
+        # Назад к количеству ингредиента
+        await state.set_state(CreateRecipeStates.ing_qty)
+        await render_ingredient_screen(
+            bot=call.bot,
+            chat_id=call.message.chat.id,
+            message_id=data["main_msg_id"],
+            ingredients=data["ingredients"],
+            draft=data["draft"].model_dump() if data.get("draft") else None,
+            footer="Введите количество:",
+            reply_markup=back_inline_kb,
+        )
+    elif current_state == CreateRecipeStates.text.state:
+        # Назад к добавлению ингредиентов
+        await state.set_state(CreateRecipeStates.ing_name)
+        await render_ingredient_screen(
+            bot=call.bot,
+            chat_id=call.message.chat.id,
+            message_id=data["main_msg_id"],
+            ingredients=data["ingredients"],
+            draft=None,
+            footer="Введите следующий ингредиент или нажмите «Завершить».",
+            reply_markup=finish_inline_kb,
+        )
+    await call.answer()
