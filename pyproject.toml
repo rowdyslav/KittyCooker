@@ -1,0 +1,16 @@
+[project]
+name = "kittycooker"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "aiogram>=3.24.0",
+    "beanie>=2.0.1",
+    "environs>=14.5.0",
+]
+
+[dependency-groups]
+dev = ["ruff"]
+
+[tool.pyright]
+ignore = ["*"]

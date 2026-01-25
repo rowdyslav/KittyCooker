@@ -1,0 +1,71 @@
+from typing import Optional, Sequence
+
+from models import Ingredient, IngredientDraft, Recipe
+from utils.constants import Category
+
+
+def format_ingredients(ingredients: Sequence[Ingredient]) -> str:
+    if not ingredients:
+        return "— пока не добавлено"
+
+    lines: list[str] = []
+
+    for idx, ing in enumerate(ingredients, start=1):
+        name = getattr(ing, "name", "—")
+        quantity = getattr(ing, "quantity", None)
+        unit = getattr(ing, "unit", None)
+
+        if quantity is not None and unit:
+            lines.append(f"{idx}. {name} — {quantity} {unit}")
+        else:
+            lines.append(f"{idx}. {name}")
+
+    return "\n".join(lines)
+
+
+def format_draft(draft: Optional[IngredientDraft]) -> str:
+    if not draft:
+        return "—"
+
+    parts: list[str] = []
+
+    name = getattr(draft, "name", None)
+    if name:
+        parts.append(f"название: {name}")
+    else:
+        parts.append("название: —")
+
+    if getattr(draft, "quantity", None) is not None:
+        parts.append(f"кол-во: {draft.quantity}")
+
+    if getattr(draft, "unit", None):
+        parts.append(f"ед.: {draft.unit}")
+
+    return ", ".join(parts)
+
+
+def format_recipe_view(recipe: Recipe) -> str:
+    ingredients_text = (
+        "\n".join(
+            f"{i + 1}. {ing.name} — {ing.quantity} {ing.unit}"
+            for i, ing in enumerate(recipe.ingredients)
+        )
+        if recipe.ingredients
+        else "—"
+    )
+
+    category_label = (
+        recipe.category.label
+        if isinstance(recipe.category, Category)
+        else str(recipe.category)
+    )
+
+    return (
+        f"🍽 <b>{recipe.name}</b>\n"
+        f"Категория: {category_label}\n\n"
+        f"<b>Ингредиенты:</b>\n"
+        f"{ingredients_text}\n\n"
+        f"<b>Описание:</b>\n"
+        f"{recipe.text or '—'}\n\n"
+        f"Готово! Приятного аппетита!"
+    )
