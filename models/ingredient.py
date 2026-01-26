@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from utils.constants import Unit
+from utils.shared import Unit
 
 
 class Ingredient(BaseModel):

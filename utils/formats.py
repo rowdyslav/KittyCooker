@@ -1,7 +1,8 @@
 from typing import Optional, Sequence
 
 from models import Ingredient, IngredientDraft, Recipe
-from utils.constants import Category
+
+from .shared import Category
 
 
 def format_ingredients(ingredients: Sequence[Ingredient]) -> str:

@@ -13,8 +13,6 @@ from deploy import keep_alive
 from env import BOT_TOKEN, DB_URL
 from models import Recipe
 
-keep_alive()
-
 dp = Dispatcher()
 
 
@@ -34,4 +32,5 @@ async def main() -> None:
 
 if __name__ == "__main__":
     basicConfig(level=INFO, stream=stdout)
+    keep_alive()
     run(main())

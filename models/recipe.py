@@ -1,6 +1,6 @@
 from beanie import Document
 
-from utils.constants import Category
+from utils.shared import Category
 
 from .ingredient import Ingredient
 
