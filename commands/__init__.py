@@ -4,4 +4,4 @@ from .start import router as start_router
 
 all_commands = [start_router, create_router, list_router]
 
-__all___ = ["all_commands"]
+__all__ = ["all_commands"]

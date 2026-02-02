@@ -22,6 +22,7 @@ class Category(str, Enum):
 
 class Unit(Enum):
     PCS = "шт"
+    PKG = "уп"
     TBSP = "ст.л"
     TSP = "ч.л"
     G = "г"
