@@ -9,7 +9,7 @@ from beanie import init_beanie
 from pymongo import AsyncMongoClient
 
 from commands import all_commands
-from deploy import keep_alive, try_revive
+from deploy import keep_alive
 from env import BOT_TOKEN, DB_NAME, DB_URL
 from models import Recipe
 
@@ -34,4 +34,3 @@ if __name__ == "__main__":
     basicConfig(level=INFO, stream=stdout)
     keep_alive()
     run(main())
-    run(try_revive())
