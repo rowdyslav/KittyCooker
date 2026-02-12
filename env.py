@@ -7,5 +7,3 @@ BOT_TOKEN = env.str("BOT_TOKEN")
 
 DB_URL = env.str("DB_URL")
 DB_NAME = env.str("DB_NAME")
-
-DEPLOY_URL = env.str("DEPLOY_URL")
